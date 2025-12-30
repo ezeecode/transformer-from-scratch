@@ -254,3 +254,37 @@ class ProjectionLayer(nn.Module):
         x = torch.log_softmax(x, dim=-1)
         return x
     
+
+
+class Transformer(nn.Module):
+    """Transformer model combining encoder, decoder, embeddings, positional encodings, and projection layer."""
+
+
+    def __init__(self, encoder: Encoder, decoder: Decoder, 
+                 src_embed: InputEmbeddings, tgt_embed: InputEmbeddings, 
+                 src_pos: PositionalEncoding, tgt_pos: PositionalEncoding, 
+                 projection_layer: ProjectionLayer) -> None:
+        super().__init__()
+        self.encoder = encoder
+        self.decoder = decoder
+        self.src_embed = src_embed
+        self.tgt_embed = tgt_embed
+        self.src_pos = src_pos
+        self.tgt_pos = tgt_pos
+        self.projection_layer = projection_layer
+
+
+    def encode(self, src, src_mask):
+        src = self.src_embed(src)
+        src = self.src_pos(src)
+        src = self.encoder(src, src_mask)
+        return src
+    
+    def decode(self, tgt, encoder_output, src_mask, tgt_mask):
+        tgt = self.tgt_embed(tgt)
+        tgt = self.tgt_pos(tgt)
+        tgt = self.decoder(tgt, encoder_output, src_mask, tgt_mask)
+        return tgt
+    
+    def project(self, decoder_output):
+        return self.projection_layer(decoder_output)
