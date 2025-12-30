@@ -145,3 +145,17 @@ class MultiHeadAttentionBlock(nn.Module):
         x = self.w_o(x)  # (batch_size, seq_len, d_model)
         return x
 
+
+
+class ResidualConnection(nn.Module):
+    """Residual connection module with layer normalization."""
+
+    def __init__(self, dropout: float) -> None:
+        super().__init__()
+        self.dropout = nn.Dropout(dropout)
+
+        self.norm = LayerNormalization()
+
+    def forward(self, x, sublayer):
+        """"Applies a residual connection to any sublayer with the same size."""
+        return x + self.dropout(sublayer(self.norm(x)))
