@@ -11,6 +11,7 @@ from tokenizers.pre_tokenizers import Whitespace
 from pathlib import Path
 
 from dataset import BilingualDataset, causal_mask
+from model import build_transformer
 
 
 def get_all_sentences(dataset, lang):
@@ -67,4 +68,12 @@ def get_dataset(config):
     validation_dataloader = DataLoader(validation_dataset, batch_size=1, shuffle=True)
 
     return train_dataloader, validation_dataloader, tokenizer_src, tokenizer_tgt
+
+
+
+
+def get_model(config, vocab_src_len, vocab_tgt_len):
+     
+     model = build_transformer(vocab_src_len, vocab_tgt_len, config['seq_len'], config['seq_len'], config['d_model'])
+     return model
 
