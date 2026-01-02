@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.utils.data import Dataset, DataLoader, random_split
 
 from datasets import load_dataset
 from tokenizers import Tokenizer
@@ -8,6 +9,8 @@ from tokenizers.trainers import WordLevelTrainer
 from tokenizers.pre_tokenizers import Whitespace
 
 from pathlib import Path
+
+from dataset import BilingualDataset, causal_mask
 
 
 def get_all_sentences(dataset, lang):
@@ -31,4 +34,37 @@ def get_or_build_tokenizer(config, dataset, lang):
         tokenizer = Tokenizer.from_file(str(tokenizer_path))
 
     return tokenizer
+
+
+def get_dataset(config):
+    dataset_raw = load_dataset('opus_books', f'{config["lang_src"]}-{config["lang_tgt"]}', split='train')
+
+    # build tokenizers
+    tokenizer_src = get_or_build_tokenizer(config, dataset_raw, config['lang_src'])
+    tokenizer_tgt = get_or_build_tokenizer(config, dataset_raw, config['lang_tgt'])
+
+    # split dataset into training and validation
+    train_dataset_size = int(0.9 * len(dataset_raw))
+    val_dataset_size = len(dataset_raw) - train_dataset_size
+
+    train_dataset_raw, val_dataset_raw = random_split(dataset_raw, [train_dataset_size, val_dataset_size])
+
+    train_dataset = BilingualDataset(train_dataset_raw, tokenizer_src, tokenizer_tgt, 
+                                     config['lang_src'], config['lang_tgt'], config['seq_len'])
+    
+    validation_dataset = BilingualDataset(val_dataset_raw, tokenizer_src, tokenizer_tgt, 
+                                         config['lang_src'], config['lang_tgt'], config['seq_len'])
+    
+
+    # check max sequence lengths in raw dataset
+    max_len_src = max([len(tokenizer_src.encode(item['translation'][config['lang_src']]).ids) for item in dataset_raw])
+    max_len_tgt = max([len(tokenizer_tgt.encode(item['translation'][config['lang_tgt']]).ids) for item in dataset_raw])
+
+    print(f"Max source sequence length: {max_len_src}")
+    print(f"Max target sequence length: {max_len_tgt}")
+
+    train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=True)
+    validation_dataloader = DataLoader(validation_dataset, batch_size=1, shuffle=True)
+
+    return train_dataloader, validation_dataloader, tokenizer_src, tokenizer_tgt
 
