@@ -10,7 +10,7 @@ from tokenizers.pre_tokenizers import Whitespace
 from torch.utils.tensorboard import SummaryWriter
 
 from pathlib import Path
-
+import warnings
 import tqdm
 
 from dataset import BilingualDataset, causal_mask
@@ -162,3 +162,10 @@ def train_model(config):
                'global_step': global_step
           }, model_filename)
 
+
+
+# main entry point
+if __name__ == "__main__":
+     warnings.filterwarnings("ignore")
+     config = get_config()
+     train_model(config)
