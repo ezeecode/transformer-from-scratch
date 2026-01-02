@@ -11,7 +11,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from pathlib import Path
 import warnings
-import tqdm
+from tqdm import tqdm
 
 from dataset import BilingualDataset, causal_mask
 from model import build_transformer
@@ -27,7 +27,7 @@ def get_all_sentences(dataset, lang):
 # Get or build tokenizer
 def get_or_build_tokenizer(config, dataset, lang):
     # config['tokenizer_file'] = '../tokenizers/tokenizer_{0}.json'
-    tokenizer_path = Path(config['tokenizer_file'].format(lang=lang))
+    tokenizer_path = Path(config['tokenizer_file'].format(lang))
 
     if not Path.exists(tokenizer_path):
         tokenizer = Tokenizer(WordLevel(unk_token="[UNK]"))
@@ -138,7 +138,7 @@ def train_model(config):
                # compute loss
                # (batch_size, seq_len, vocab_tgt_size) --> (batch_size * seq_len, vocab_tgt_size)
                loss = loss_function(projection_output.view(-1, tokenizer_tgt.get_vocab_size()), label.view(-1))
-               batch_iterator.set_postfix(f"Loss: {loss.item():6.3f}")
+               batch_iterator.set_postfix({"loss": f"{loss.item():6.3f}"})
 
                # log the loss on tensorboard
                writer.add_scalar('Training Loss', loss.item(), global_step)

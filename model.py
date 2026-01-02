@@ -41,7 +41,7 @@ class PositionalEncoding(nn.Module):
         self.register_buffer('pe', pe)
 
     def forward(self, x):
-        x = x + (self.pe[:, x.shape[1], :]).requires_grad_(False)
+        x = x + (self.pe[:, :x.shape[1], :]).requires_grad_(False)  # shape: (batch_size, seq_len, d_model)
         return self.dropout(x)
     
 
@@ -106,7 +106,7 @@ class MultiHeadAttentionBlock(nn.Module):
     def attention(query, key, value, mask, droput: nn.Dropout):
         """Compute 'Scaled Dot Product Attention'"""
 
-        d_k = query[-1]
+        d_k = query.shape[-1]
 
         # (batch_size, h, seq_len, d_k) @ (batch_size, h, d_k, seq_len) --> (batch_size, h, seq_len, seq_len)
         attention_scores = (query @ key.transpose(-2, -1)) / math.sqrt(d_k)  # (batch_size, h, seq_len, seq_len)

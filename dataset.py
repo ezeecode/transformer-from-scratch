@@ -15,9 +15,9 @@ class BilingualDataset(Dataset):
         self.tgt_lang = tgt_lang
         self.seq_len = seq_len
 
-        self.sos_token = torch.Tensor([tokenizer_src.token_to_id("[SOS]")], dtype=torch.int64)
-        self.eos_token = torch.Tensor([tokenizer_src.token_to_id("[EOS]")], dtype=torch.int64)
-        self.pad_token = torch.Tensor([tokenizer_src.token_to_id("[PAD]")], dtype=torch.int64)
+        self.sos_token = torch.tensor([tokenizer_src.token_to_id("[SOS]")], dtype=torch.int64)
+        self.eos_token = torch.tensor([tokenizer_src.token_to_id("[EOS]")], dtype=torch.int64)
+        self.pad_token = torch.tensor([tokenizer_src.token_to_id("[PAD]")], dtype=torch.int64)
 
 
     def __len__(self):
@@ -40,7 +40,7 @@ class BilingualDataset(Dataset):
         # add SOS and EOS tokens and padding to source text
         encoder_input = torch.cat([
             self.sos_token,
-            torch.Tensor(encoder_input_tokens, dytype=torch.int64),
+            torch.tensor(encoder_input_tokens, dtype=torch.int64),
             self.eos_token,
             self.pad_token.repeat(encoder_num_padding_tokens)
         ])
@@ -48,13 +48,13 @@ class BilingualDataset(Dataset):
         # add SOS token and padding to decoder input
         decoder_input = torch.cat([
             self.sos_token,
-            torch.Tensor(decoder_input_tokens, dtype=torch.int64),
+            torch.tensor(decoder_input_tokens, dtype=torch.int64),
             self.pad_token.repeat(decoder_num_padding_tokens)
         ])
 
-        # create target tokens by adding EOS token and padding (what we expect the decoder to output)
-        target = torch.cat([
-            torch.Tensor(decoder_input_tokens, dtype=torch.int64),
+        # create label tokens by adding EOS token and padding (what we expect the decoder to output)
+        label = torch.cat([
+            torch.tensor(decoder_input_tokens, dtype=torch.int64),
             self.eos_token,
             self.pad_token.repeat(decoder_num_padding_tokens)
         ])
@@ -62,7 +62,7 @@ class BilingualDataset(Dataset):
         # sanity checks for sequence lengths
         assert encoder_input.size(0) == self.seq_len
         assert decoder_input.size(0) == self.seq_len
-        assert target.size(0) == self.seq_len
+        assert label.size(0) == self.seq_len
 
         return {
             "encoder_input": encoder_input,                                                     # {seq_len}
@@ -70,7 +70,7 @@ class BilingualDataset(Dataset):
             "encoder_mask": (encoder_input != self.pad_token).unsqueeze(0).unsqueeze(0).int(),  # {1, 1, seq_len} -- 1 for non-pad tokens, 0 for pad tokens
             "decoder_mask": (decoder_input != self.pad_token).unsqueeze(0).unsqueeze(0).int() & causal_mask(decoder_input.size(0)),  # (1, seq_len) & (1, seq_len, seq_len)
             # {1, 1, seq_len, seq_len} -- 1 for non-pad tokens in allowed positions, 0 otherwise
-            "target": target,                                                                    # {seq_len}
+            "label": label,                                                                    # {seq_len}
             "src_text": src_text,
             "tgt_text": tgt_text
         }

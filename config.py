@@ -7,15 +7,15 @@ def get_config():
         "batch_size": 8,
         "num_epochs": 20,
         "lr": 10**-4,
-        "seq_len": 350,
+        "seq_len": 800,
         "d_model": 512,
         "lang_src": "en",
         "lang_tgt": "es",
         "model_folder": "weights",
         "model_basename": "tmodel_",
         "preload": None,
-        "tozenizer_file": "tozenizer_{0}.json",
-        "experiment name": "runs/tmodel_experiment"
+        "tokenizer_file": "tokenizer_{0}.json",
+        "experiment_name": "runs/tmodel_experiment"
     }
 
 
